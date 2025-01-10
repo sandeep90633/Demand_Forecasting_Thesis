@@ -1,39 +1,21 @@
-CREATE OR REPLACE PROCEDURE CalculateABCXYZClassification()
-LANGUAGE plpgsql
-AS $$
-BEGIN
-    -- Drop temporary tables if they exist
-    DROP TABLE IF EXISTS revenue;
-    DROP TABLE IF EXISTS total_revenue_cal;
-    DROP TABLE IF EXISTS cumulative_share_cal;
-    DROP TABLE IF EXISTS date_range;
-    DROP TABLE IF EXISTS weekly_dates;
-    DROP TABLE IF EXISTS merge_dates_ids;
-    DROP TABLE IF EXISTS orders_per_week;
-    DROP TABLE IF EXISTS avg_weekly_orders;
-    DROP TABLE IF EXISTS avg_weekly_demand;
-    DROP TABLE IF EXISTS sd_of_weekly_orders;
-    DROP TABLE IF EXISTS cv_of_weekly_orders;
-    DROP TABLE IF EXISTS rank_of_cv;
-
-    CREATE TEMPORARY TABLE revenue AS (
-        SELECT 
-            a.sku_id,
-            COALESCE(b.revenue_per_id, 0) AS revenue_per_id
-        FROM 
-            stock a
-        LEFT JOIN 
-            (
-                SELECT 
-                    sku_id,
-                    SUM(revenue) AS revenue_per_id
-                FROM
-                    sales
-                GROUP BY sku_id
-                ORDER BY revenue_per_id DESC
-            ) AS b 
-        ON a.sku_id = b.sku_id 
-    );
+CREATE TEMPORARY TABLE revenue AS (
+    SELECT 
+        a.sku_id,
+        COALESCE(b.revenue_per_id, 0) AS revenue_per_id
+    FROM 
+        stock a
+    LEFT JOIN 
+        (
+            SELECT 
+                sku_id,
+                SUM(revenue) AS revenue_per_id
+            FROM
+                sales
+            GROUP BY sku_id
+            ORDER BY revenue_per_id DESC
+        ) AS b 
+    ON a.sku_id = b.sku_id 
+);
 
     CREATE TEMPORARY TABLE total_revenue_cal AS (
         SELECT 
