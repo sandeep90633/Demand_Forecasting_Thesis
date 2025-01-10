@@ -1,18 +1,30 @@
+import sys
+from pathlib import Path
 import psycopg2
 import pandas as pd
+import numpy as np
+
+sys.path.append(str(Path().resolve().parent))
+
+from utils.data_ingestion import data_ingestion
 
 connection = psycopg2.connect(
     dbname="postgres",
     user="postgres",
-    password="*****",
+    password="******",
     host="127.0.0.1",
     port="5433"
 )
 
-data = 'data/original_sales_data.csv'
+bucket_name = 'mythesisdata'
+local_folder = 'data'
+local_file_path = 'original_sales_data.csv'
+
+#Downloading raw data from S3 bucket
+data_ingestion(bucket_name,local_folder,local_file_path)
 
 try:
-    sales = pd.read_csv(data)
+    sales = pd.read_csv(f'{local_folder}/{local_file_path}')
 except Exception as e:
     print(f'Error:{e}, occurred when reading data.')
     raise Exception
