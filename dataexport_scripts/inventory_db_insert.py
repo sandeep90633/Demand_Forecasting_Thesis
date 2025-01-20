@@ -30,6 +30,7 @@ except Exception as e:
     raise Exception
 
 #Cleaning dataset
+inventory = inventory.dropna(how='all')
 inventory.columns = [x.lower() for x in inventory.columns]
 inventory.columns = inventory.columns.str.strip()
 inventory.columns = inventory.columns.str.replace(' ', '_')
