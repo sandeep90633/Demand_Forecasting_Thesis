@@ -155,6 +155,8 @@ def main():
     # Concatenating historical sales and prediction data, because to generate additional features for prediction data.
     sales = pd.concat([sales, prediction_data], ignore_index=True)
     
+    sales['order_quantity']= sales.groupby(['sku_id', 'warehouse_id'])['order_quantity'].transform(lambda x: x.replace(0, x.mean()))
+    
     # Depending on the period that user selected, aggregation will be done
     if args.period == 'week':
         sales = sales.groupby(['sku_id','warehouse_id','year','month', 'week'])['order_quantity'].sum().reset_index()
@@ -169,8 +171,12 @@ def main():
     
     sales = oneHotEncoding(sales, 'sku_id')
     
-    training_data = sales.query("year<=2023 and week<31")
-    prediction_data = sales.query("year==2023 and week==31")
+    if args.period == 'week':
+        training_data = sales.query(f"year<={args.year} and week<{args.week}")
+        prediction_data = sales.query(f"year=={args.year} and week=={args.week}")
+    else:
+        training_data = sales.query(f"year<={args.year} and month<{args.month}")
+        prediction_data = sales.query(f"year=={args.year} and month=={args.month}")
     
     X_train = training_data.drop(columns=['order_quantity'])
     y_train = training_data['order_quantity']
