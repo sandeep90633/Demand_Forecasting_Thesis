@@ -1,7 +1,6 @@
 import psycopg2
 import pandas as pd
 import numpy as np
-import argparse
 
 def data_ingestion(input_file):
     try:
@@ -104,13 +103,13 @@ def main():
     connection = psycopg2.connect(
     dbname="thesis",
     user="postgres",
-    password="Dinu@123",
+    password="*****",
     host="127.0.0.1",
     port="5433"
     )
     
-    # connection_and_insert_data(connection, 'data/weekly_prediction_data.csv', 'weekly_prediction_data')
-    inventory_data_db_insert('data/original_inventory.csv', connection, 'inventory')
+    connection_and_insert_data(connection, 'data/predicted_data.csv', 'weekly_predicted_data')
+    # inventory_data_db_insert('data/original_inventory.csv', connection, 'inventory')
     
 if __name__ == "__main__":
     main()

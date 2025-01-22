@@ -35,6 +35,11 @@ CREATE TABLE weekly_prediction_data (
     cumulative_sum REAL
 )
 
+CREATE TABLE weekly_predicted_data (
+    sku_id VARCHAR,
+    predicted_quantity REAL
+)
+
 CREATE TABLE abc_xyz_table (
     sku_id TEXT,
     abc_category TEXT,

@@ -3,11 +3,13 @@ import pandas as pd
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.ensemble import RandomForestRegressor
 import argparse
+import urllib.parse
 
 # connecting to database to retrieve data
 def conn(username, password, hostname, port, database_name):
     try:
-        connection = create_engine(f"postgresql://{username}:{password}@{hostname}:{port}/{database_name}")
+        encoded_password = urllib.parse.quote(password)
+        connection = create_engine(f"postgresql://{username}:{encoded_password}@{hostname}:{port}/{database_name}")
         
         print(f"Successfully connected to database: {database_name}")
         return connection
@@ -39,6 +41,8 @@ def create_time_series_features(col, df: pd.DataFrame):
 
     for feature_name, feature_values in features.items():
         df[feature_name] = feature_values
+        
+    print("Date features are added into dataframe..")
 
     return df
 
@@ -52,6 +56,8 @@ def weekly_feature_engineering(df, cols, aggregate_col):
 
     # Removing events that have NaN values
     df = df.dropna(subset=['lag_1', 'lag_2','lag_7', 'rolling_avg_3_weeks', 'cumulative_sum'])
+    
+    print("Added additional features to the dataframe.")
     
     return df
 
@@ -80,6 +86,8 @@ def oneHotEncoding(df, index_column):
     one_hot_encoded = pd.concat([df.reset_index(),one_hot_df], axis=1)
     one_hot_encoded = one_hot_encoded.drop(categorical_cols, axis=1)
     df = one_hot_encoded.set_index(index_column)
+    
+    print("Converted categorical columns into numeric.")
 
     return df
 
@@ -107,6 +115,8 @@ def model_prediction(trained_model, data):
     
     predictions = trained_model.predict(data)
     
+    print("Prediction successful.")
+    
     return predictions
     
 def main():
@@ -124,12 +134,14 @@ def main():
     parser.add_argument('-year',help='For which year, forecasting should be made.')
     parser.add_argument('-month',help='For which month, forecasting should be made.')
     parser.add_argument('-week',help='For which week, forecasting should be made.')
-    parser.add_argument('-predicted_data_file_path',help='prediction data table name which you want to download')
+    # parser.add_argument('-predicted_data_file_path',help='prediction data table name which you want to download')
     
     args = parser.parse_args()
     
-    if args.period is None or args.period!='week' or args.period!='month':
-        print('Check period argument!')
+    print(f"args: {args}")
+    
+    if args.period is None or args.period not in ['week', 'month']:
+        print("Invalid 'period' argument, Please provide week or month!")
         raise Exception
     
     if args.period == 'week' and (args.week == None or args.week == 0):
@@ -142,18 +154,20 @@ def main():
     sales = create_time_series_features('order_date', sales)
     
     # As we dont have prediction data available, creating prediction data depending on the items present in inventory
-    inventory_data = data_ingestion (connection, args.prediction_data_table)
+    inventory_data = data_ingestion (connection, args.inventory_data_table)
     prediction_data = inventory_data[['sku_id', 'warehouse_id']]
     
     # Adding date features to prediction data. Can modify depending on which weeks or months we want to predict
-    prediction_data['year'] = args.year
-    prediction_data['month'] = args.month
+    prediction_data['year'] = int(args.year)
+    prediction_data['month'] = int(args.month)
     if args.period == 'week':
-        prediction_data['week'] = args.week
+        prediction_data['week'] = int(args.week)
     prediction_data['order_quantity'] = 0
     
     # Concatenating historical sales and prediction data, because to generate additional features for prediction data.
     sales = pd.concat([sales, prediction_data], ignore_index=True)
+    
+    sales['order_quantity']= sales.groupby(['sku_id', 'warehouse_id'])['order_quantity'].transform(lambda x: x.replace(0, x.mean()))
     
     # Depending on the period that user selected, aggregation will be done
     if args.period == 'week':
@@ -179,11 +193,11 @@ def main():
     
     trained_model = model_training(X_train, y_train)
     
-    predictions = model_prediction(trained_model, trained_model)
+    predictions = model_prediction(trained_model, prediction_data)
     
     predictions = pd.DataFrame(predictions, index=prediction_data.index, columns=['predicted_quantity'])
     
-    predictions.to_csv(args.predicted_data_file_path)
+    predictions.to_csv('data/median_predicted_data.csv')
 
 if __name__ == "__main__":
     main()
