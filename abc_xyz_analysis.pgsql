@@ -1,35 +1,3 @@
--- CREATE TABLE sales (
---     order_number VARCHAR,
---     order_date DATE,
---     sku_id VARCHAR,
---     warehouse_id VARCHAR,
---     customer_type VARCHAR,
---     order_quantity FLOAT,
---     unit_sale_price FLOAT,
---     revenue FLOAT
--- )
-
--- CREATE TABLE inventory (
---     sku_id VARCHAR,
---     vendor_name VARCHAR,
---     warehouse_id VARCHAR,
---     current_inventory_quantity FLOAT,
---     cost_per_sku FLOAT,
---     total_value FLOAT,
---     units VARCHAR,
---     average_lead_time FLOAT,
---     maximum_lead_time FLOAT,
---     unit_price FLOAT
--- )
--- SELECT * FROM inventory;
--- SELECT * FROM sales;
-
--- CREATE TABLE abc_xyz_table (
---     sku_id TEXT,
---     abc_category TEXT,
---     xyz_category TEXT
--- )
-
 INSERT INTO abc_xyz_table
 WITH overall_revenue_per_id AS (
     SELECT 
