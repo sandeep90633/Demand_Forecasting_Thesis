@@ -101,16 +101,26 @@ def sales_data_db_insert(source_data, conn, db_table_name):
     
 def main():
     
+    parser = argparse.ArgumentParser()
+    
+    parser.add_argument('-db_user', help='database username')
+    parser.add_argument('-db_password', help='database password')
+    parser.add_argument('-hostname', help='database host')
+    parser.add_argument('-db_port',help='database port')
+    parser.add_argument('-db_name',help='name of the database where data is stored')
+    
+    args = parser.parse_args()
+    
     connection = psycopg2.connect(
-    dbname="thesis",
-    user="postgres",
-    password="Dinu@123",
-    host="127.0.0.1",
-    port="5433"
+        dbname=args.db_name,
+        user=args.db_user,
+        password=args.db_password,
+        host=args.hostname,
+        port=args.db_port
     )
     
-    # connection_and_insert_data(connection, 'data/weekly_prediction_data.csv', 'weekly_prediction_data')
-    inventory_data_db_insert('data/original_inventory.csv', connection, 'inventory')
+    connection_and_insert_data(connection, 'data/weekly_prediction_data.csv', 'weekly_prediction_data')
+    #inventory_data_db_insert('data/original_inventory.csv', connection, 'inventory')
     
 if __name__ == "__main__":
     main()
