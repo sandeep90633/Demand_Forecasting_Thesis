@@ -3,11 +3,14 @@ import pandas as pd
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.ensemble import RandomForestRegressor
 import argparse
+import urllib.parse
+
 
 # connecting to database to retrieve data
 def conn(username, password, hostname, port, database_name):
     try:
-        connection = create_engine(f"postgresql://{username}:{password}@{hostname}:{port}/{database_name}")
+        encoded_password = urllib.parse.quote(password)
+        connection = create_engine(f"postgresql://{username}:{encoded_password}@{hostname}:{port}/{database_name}")
         
         print(f"Successfully connected to database: {database_name}")
         return connection
@@ -128,7 +131,9 @@ def main():
     
     args = parser.parse_args()
     
-    if args.period is None or args.period!='week' or args.period!='month':
+    print(f"args:{args}")
+    
+    if args.period is None or args.period not in ['week','month']:
         print('Check period argument!')
         raise Exception
     
@@ -142,18 +147,19 @@ def main():
     sales = create_time_series_features('order_date', sales)
     
     # As we dont have prediction data available, creating prediction data depending on the items present in inventory
-    inventory_data = data_ingestion (connection, args.prediction_data_table)
+    inventory_data = data_ingestion (connection, args.inventory_data_table)
     prediction_data = inventory_data[['sku_id', 'warehouse_id']]
     
     # Adding date features to prediction data. Can modify depending on which weeks or months we want to predict
-    prediction_data['year'] = args.year
-    prediction_data['month'] = args.month
+    prediction_data['year'] = int(args.year)
+    prediction_data['month'] = int(args.month)
     if args.period == 'week':
-        prediction_data['week'] = args.week
+        prediction_data['week'] = int(args.week)
     prediction_data['order_quantity'] = 0
     
     # Concatenating historical sales and prediction data, because to generate additional features for prediction data.
     sales = pd.concat([sales, prediction_data], ignore_index=True)
+    print("Historical sales data and future week data concatenated...")
     
     sales['order_quantity']= sales.groupby(['sku_id', 'warehouse_id'])['order_quantity'].transform(lambda x: x.replace(0, x.mean()))
     
@@ -172,11 +178,11 @@ def main():
     sales = oneHotEncoding(sales, 'sku_id')
     
     if args.period == 'week':
-        training_data = sales.query(f"year<={args.year} and week<{args.week}")
-        prediction_data = sales.query(f"year=={args.year} and week=={args.week}")
+        training_data = sales.query(f"year<={int(args.year)} and week<{int(args.week)}")
+        prediction_data = sales.query(f"year=={int(args.year)} and week=={int(args.week)}")
     else:
-        training_data = sales.query(f"year<={args.year} and month<{args.month}")
-        prediction_data = sales.query(f"year=={args.year} and month=={args.month}")
+        training_data = sales.query(f"year<={int(args.year)} and month<{int(args.month)}")
+        prediction_data = sales.query(f"year=={int(args.year)} and month=={int(args.month)}")
     
     X_train = training_data.drop(columns=['order_quantity'])
     y_train = training_data['order_quantity']
@@ -185,7 +191,7 @@ def main():
     
     trained_model = model_training(X_train, y_train)
     
-    predictions = model_prediction(trained_model, trained_model)
+    predictions = model_prediction(trained_model, prediction_data)
     
     predictions = pd.DataFrame(predictions, index=prediction_data.index, columns=['predicted_quantity'])
     

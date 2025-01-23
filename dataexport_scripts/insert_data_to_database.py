@@ -35,7 +35,7 @@ def clean_inventory_data_values_with_double_quotes(list_of_columns, df):
 
 def inventory_data_transformations_and_local_export(df, local_file_path):
     
-    df['current_inventory_quantity'] =  df['current_inventory_quantity'].apply(lambda x: round(x/10  if x >= 100 else x))
+    df['current_inventory_quantity'] =  df['current_inventory_quantity'].apply(lambda x: round(x/10  if x >= 200 else x))
 
     df['total_value'] = round((df['current_inventory_quantity'].fillna(0) * df['cost_per_sku'].fillna(0)))
     
@@ -87,7 +87,7 @@ def inventory_data_db_insert(source_data, conn, db_table_name):
     # cleaned and transformed data will be stored in local_file_path, which is    
     inventory = inventory_data_transformations_and_local_export(inventory, local_file_path)
     
-    connection_and_insert_data(conn, local_file_path, db_table_name)
+    # connection_and_insert_data(conn, local_file_path, db_table_name)
 
 def sales_data_db_insert(source_data, conn, db_table_name):
     
@@ -119,8 +119,10 @@ def main():
         port=args.db_port
     )
     
-    connection_and_insert_data(connection, 'data/weekly_prediction_data.csv', 'weekly_prediction_data')
-    #inventory_data_db_insert('data/original_inventory.csv', connection, 'inventory')
+    # connection_and_insert_data(connection, 'metrics.csv', 'model_accuracy_metrics')
+    inventory_data_db_insert('data/original_inventory.csv', connection, 'inventory')
     
 if __name__ == "__main__":
     main()
+    
+# python forecasting_scripts/weekly_forecast.py -db_user "postgres" -db_password "***" -hostname "127.0.0.1" -db_port "5433" -db_name "thesis"

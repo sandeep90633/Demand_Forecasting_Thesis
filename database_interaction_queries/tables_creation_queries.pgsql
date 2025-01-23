@@ -45,3 +45,17 @@ CREATE TABLE abc_xyz_table (
     abc_category TEXT,
     xyz_category TEXT
 )
+
+CREATE TABLE actual_predict_quantity (    
+    sku_id VARCHAR,
+    year INTEGER,
+    month INTEGER,
+    week INTEGER,
+    order_quantity REAL,
+    predicted_quantity REAL
+)
+
+CREATE TABLE model_accuracy_metrics (
+    RMSE REAL,
+    R2_Score REAL
+)
