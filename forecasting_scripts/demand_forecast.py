@@ -1,5 +1,6 @@
 from sqlalchemy import create_engine
 import pandas as pd
+import numpy as np
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.ensemble import RandomForestRegressor
 import argparse
@@ -49,12 +50,11 @@ def create_time_series_features(col, df: pd.DataFrame):
 def weekly_feature_engineering(df, cols, aggregate_col):
     df['lag_1'] = df.groupby(cols)[aggregate_col].shift(1)
     df['lag_2'] = df.groupby(cols)[aggregate_col].shift(2)
-    df['lag_7'] = df.groupby(cols)[aggregate_col].shift(7)
     df['rolling_avg_3_weeks'] = df.groupby(cols)[aggregate_col].transform(lambda x: x.rolling(window=3).mean())
     df['cumulative_sum'] = df.groupby(cols)[aggregate_col].cumsum()
 
     # Removing events that have NaN values
-    df = df.dropna(subset=['lag_1', 'lag_2','lag_7', 'rolling_avg_3_weeks', 'cumulative_sum'])
+    df = df.dropna(subset=['lag_1', 'lag_2', 'rolling_avg_3_weeks', 'cumulative_sum'])
     
     return df
 
@@ -109,6 +109,8 @@ def model_training(X, y):
 def model_prediction(trained_model, data):
     
     predictions = trained_model.predict(data)
+    
+    print("Model predicted results successfully.")
     
     return predictions
     
@@ -195,7 +197,14 @@ def main():
     
     predictions = pd.DataFrame(predictions, index=prediction_data.index, columns=['predicted_quantity'])
     
-    predictions.to_csv(args.predicted_data_file_path)
+    try:
+        predictions['predicted_quantity'] = np.ceil(predictions['predicted_quantity'])
+        predictions.to_csv(args.predicted_data_file_path)
+        
+        print(f"Predicted results exported to this path:{args.predicted_data_file_path}")
+    except Exception as e:
+        print(f"Error occurred while exporting predicted data:{e}")
+        raise Exception
 
 if __name__ == "__main__":
     main()

@@ -119,8 +119,8 @@ def main():
         port=args.db_port
     )
     
-    # connection_and_insert_data(connection, 'metrics.csv', 'model_accuracy_metrics')
-    inventory_data_db_insert('data/original_inventory.csv', connection, 'inventory')
+    connection_and_insert_data(connection, 'data/weekly_predicted_data.csv', 'weekly_predicted_data')
+    # inventory_data_db_insert('data/original_inventory.csv', connection, 'inventory')
     
 if __name__ == "__main__":
     main()
