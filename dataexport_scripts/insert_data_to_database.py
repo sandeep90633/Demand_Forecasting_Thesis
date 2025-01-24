@@ -119,7 +119,7 @@ def main():
         port=args.db_port
     )
     
-    connection_and_insert_data(connection, 'data/weekly_predicted_data.csv', 'weekly_predicted_data')
+    connection_and_insert_data(connection, 'data/inventory.csv', 'inventory')
     # inventory_data_db_insert('data/original_inventory.csv', connection, 'inventory')
     
 if __name__ == "__main__":

@@ -59,3 +59,17 @@ CREATE TABLE model_accuracy_metrics (
     RMSE REAL,
     R2_Score REAL
 )
+
+CREATE TABLE inventory_alert_table(
+    sku_id TEXT,
+    current_inventory_quantity REAL,
+    predicted_quantity REAL,
+    stock_status TEXT,
+    PRIMARY KEY(sku_id)
+)
+
+CREATE TABLE stock_status (
+    stock_status TEXT,
+    item_count INTEGER,
+    PRIMARY KEY(stock_status)
+)
